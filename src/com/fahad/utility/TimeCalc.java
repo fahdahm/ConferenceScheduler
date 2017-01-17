@@ -8,9 +8,8 @@ import com.fahad.pojos.Talks;
 
 public class TimeCalc {
 
-	private static String getNextScheduledTime(Date date, int duration) {
+	public static String getNextScheduledTime(Date date, int duration) {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mma ");
-
 		long time = date.getTime();
 		long timeDuration = duration * 60 * 1000;
 		long newTime = time + timeDuration;
@@ -21,15 +20,12 @@ public class TimeCalc {
 
 	public static int getTotalTalksTime(List<Talks> talksList) {
 		int totalTime = 0;
-
 		if (talksList == null || talksList.isEmpty()) {
 			return 0;
 		}
-
 		for (Talks t : talksList) {
-			totalTime = totalTime + t.getTime();
+			totalTime = totalTime + t.getDuration();
 		}
-
 		return totalTime;
 	}
 }

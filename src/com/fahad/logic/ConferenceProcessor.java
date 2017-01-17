@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.fahad.exception.InvalidTalkException;
 import com.fahad.pojos.Talks;
+import com.fahad.utility.TimeCalc;
 
 public class ConferenceProcessor {
 
@@ -48,6 +49,7 @@ public class ConferenceProcessor {
 	 * @param list
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public List<Talks> sortedTalks(List<String> list) {
 		List<Talks> objTalkList = new ArrayList<Talks>();
 
@@ -83,20 +85,25 @@ public class ConferenceProcessor {
 	public List<List<Talks>> getSchedule(List<Talks> talksList) throws InvalidTalkException {
 		List<Talks> talkTemp = new ArrayList<Talks>();
 		talkTemp.addAll(talksList);
+		// TODO
+		// remove
+		int perDayMinTime = 6 * 60;
+		int totalTalksTime = TimeCalc.getTotalTalksTime(talkTemp);
+		int totalPossibleDays = totalTalksTime / perDayMinTime;
 
-		List<List<Talks>> mornings = finCombination(talkTemp, true);
+		List<List<Talks>> mornings = finCombination(talkTemp, totalPossibleDays, true);
 		for (List<Talks> talkList : mornings) {
 			talkTemp.removeAll(talkList);
 		}
 
-		List<List<Talks>> evenings = finCombination(talkTemp, false);
+		List<List<Talks>> evenings = finCombination(talkTemp, totalPossibleDays, false);
 		for (List<Talks> talkList : evenings) {
 			talkTemp.removeAll(talkList);
 		}
 
-		// if
+		// No talks! Error occured somewhere.
 		if (!talkTemp.isEmpty()) {
-			throw new InvalidTalkException("EMpty Schedule");
+			// throw new InvalidTalkException("Empty Schedule");
 		}
 
 		// TODO
@@ -110,7 +117,8 @@ public class ConferenceProcessor {
 		return printList(mornings, evenings);
 	}
 
-	private List<List<Talks>> finCombination(List<Talks> talksListForOperation, boolean isMorning) {
+	private List<List<Talks>> finCombination(List<Talks> talksListForOperation, int totalPossibleDays,
+			boolean isMorning) {
 		int minSessionTimeLimit = 180;
 		int maxSessionTimeLimit = 240;
 
@@ -133,9 +141,9 @@ public class ConferenceProcessor {
 				int currentCount = startPoint;
 				startPoint++;
 				Talks currentTalk = talksListForOperation.get(currentCount);
-				if (currentTalk.isScheduled())
+				if (currentTalk.isSchduled())
 					continue;
-				int talkTime = currentTalk.getTimeDuration();
+				int talkTime = currentTalk.getDuration();
 				// If the current talk time is greater than maxSessionTimeLimit
 				// or
 				// sum of the current time and total of talk time added in list
@@ -173,7 +181,7 @@ public class ConferenceProcessor {
 			if (validSession) {
 				possibleCombinationsOfTalks.add(possibleCombinationList);
 				for (Talks talk : possibleCombinationList) {
-					talk.setScheduled(true);
+					talk.setSchduled(true);
 				}
 				possibleCombinationCount++;
 				if (possibleCombinationCount == totalPossibleDays)
@@ -194,7 +202,7 @@ public class ConferenceProcessor {
 
 			// Create a date and initialize start time 09:00 AM.
 			Date date = new Date();
-			SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mma ");
+			SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm");
 			date.setHours(9);
 			date.setMinutes(0);
 			date.setSeconds(0);
@@ -208,34 +216,34 @@ public class ConferenceProcessor {
 			// next time using time duration of current talk.
 			List<Talks> mornSessionTalkList = combForMornSessions.get(dayCount);
 			for (Talks talk : mornSessionTalkList) {
-				talk.setScheduledTime(scheduledTime);
-				System.out.println(scheduledTime + talk.getTitle());
-				scheduledTime = getNextScheduledTime(date, talk.getTimeDuration());
+				talk.setSchTime(scheduledTime);
+				System.out.println(scheduledTime + talk.getTopicName());
+				scheduledTime = TimeCalc.getNextScheduledTime(date, talk.getDuration());
 				talkList.add(talk);
 			}
 
 			// Scheduled Lunch Time for 60 mins.
 			int lunchTimeDuration = 60;
-			Talk lunchTalk = new Talks("Lunch", 60);
-			lunchTalk.setScheduledTime(scheduledTime);
+			Talks lunchTalk = new Talks("Lunch", 60);
+			lunchTalk.setSchTime(scheduledTime);
 			talkList.add(lunchTalk);
 			System.out.println(scheduledTime + "Lunch");
 
 			// Evening Session - set the scheduled time in the talk and get the
 			// next time using time duration of current talk.
-			scheduledTime = getNextScheduledTime(date, lunchTimeDuration);
+			scheduledTime = TimeCalc.getNextScheduledTime(date, lunchTimeDuration);
 			List<Talks> eveSessionTalkList = combForEveSessions.get(dayCount);
 			for (Talks talk : eveSessionTalkList) {
-				talk.setScheduledTime(scheduledTime);
+				talk.setSchTime(scheduledTime);
 				talkList.add(talk);
-				System.out.println(scheduledTime + talk.getTitle());
-				scheduledTime = getNextScheduledTime(date, talk.getTimeDuration());
+				System.out.println(scheduledTime + talk.getTopicName());
+				scheduledTime = TimeCalc.getNextScheduledTime(date, talk.getDuration());
 			}
 
 			// Scheduled Networking Event at the end of session, Time duration
 			// is just to initialize the Talk object.
 			Talks networkingTalk = new Talks("Networking Event", 60);
-			networkingTalk.setScheduledTime(scheduledTime);
+			networkingTalk.setSchTime(scheduledTime);
 			talkList.add(networkingTalk);
 			System.out.println(scheduledTime + "Networking Event\n");
 			scheduledTalksList.add(talkList);
