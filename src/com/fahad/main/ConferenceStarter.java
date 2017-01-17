@@ -1,41 +1,34 @@
 package com.fahad.main;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import com.fahad.exception.InvalidTalkException;
 import com.fahad.logic.ConferenceProcessor;
-import com.fahad.pojos.Conference;
+import com.fahad.pojos.Talks;
 
 public class ConferenceStarter {
 
 	public static void main(String[] args) {
-		if (args.length < 1) {
-			System.out.println("Supply the input file to schedule");
-		}
-		File file = new File(args[0]);
+		String fileName = "D:\\input.txt";
+		File file = new File(fileName);
+		ConferenceProcessor cf = new ConferenceProcessor();
 
-		List<String> list = getTalkListFromFile(file);
-		Conference conference = new ConferenceProcessor().schdule(list);
-		conference.toString();
-	}
+		// Read test file
+		List<String> rawList = cf.createListFromFile(file);
 
-	public static List<String> getTalkListFromFile(File file) {
-		List<String> talkList = new ArrayList<String>();
+		// Sort the list of Talk
+		List<Talks> sortedList = cf.sortedTalks(rawList);
+
+		// Find the schdule of List
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(file));
-			String strLine = reader.readLine();
-			while (strLine != null) {
-				talkList.add(strLine);
-				strLine = reader.readLine();
-			}
-		} catch (Exception e) {
-			System.err.println("Error: " + e.getMessage());
-		} finally {
+			List<List<Talks>> finalList = cf.getSchedule(sortedList);
+		} catch (InvalidTalkException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return talkList;
+
 	}
 
 }

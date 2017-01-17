@@ -1,16 +1,12 @@
 package com.fahad.pojos;
 
-import com.fahad.constants.TimeUnits;
-
-public class Talks {
+public class Talks implements Comparable {
 	private String topicName;
 	private int time;
-	private TimeUnits units;
 
-	public Talks(String talkTopic, int time, TimeUnits units) {
+	public Talks(String talkTopic, int time) {
 		this.topicName = talkTopic;
 		this.time = time;
-		this.units = units;
 	}
 
 	public String getTopicName() {
@@ -21,13 +17,20 @@ public class Talks {
 		return time;
 	}
 
-	public TimeUnits getUnits() {
-		return units;
-	}
 
 	@Override
 	public String toString() {
-		return "Talks [topicName=" + topicName + ", time=" + time + ", units=" + units + "]";
+		return "Talks [topicName=" + topicName + ", time=" + time + "]";
 	}
 
+	@Override
+	public int compareTo(Object obj) {
+		Talks talk = (Talks) obj;
+		if (this.time > talk.time)
+			return -1;
+		else if (this.time < talk.time)
+			return 1;
+		else
+			return 0;
+	}
 }
