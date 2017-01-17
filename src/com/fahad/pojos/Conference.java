@@ -14,4 +14,15 @@ public class Conference {
 		tracks.add(t);
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder str = new StringBuilder();
+		str.append("Conference Schedule: \n");
+		for (int i = 0; i < tracks.size(); i++) {
+			str.append("Track " + (i + 1) + ":\t");
+			str.append(tracks.get(i) + "\n");
+		}
+		return str.toString();
+	}
+
 }
