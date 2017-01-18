@@ -9,7 +9,7 @@ import com.fahad.pojos.Talks;
 public class TimeCalc {
 
 	public static String getNextScheduledTime(Date date, int duration) {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mma ");
+		SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mma");
 		long time = date.getTime();
 		long timeDuration = duration * 60 * 1000;
 		long newTime = time + timeDuration;
