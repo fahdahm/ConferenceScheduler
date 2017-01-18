@@ -65,7 +65,7 @@ public class ConferenceProcessor {
 				} else if (talk.endsWith("lightning")) {
 					objTalkList.add(new Talks(talk.substring(0, lastSpaceIndex), 5));
 				} else {
-					throw new InvalidTalkException("Talk may not be scheduled");
+					throw new InvalidTalkException("Invalid Time in list. Cannot be scheduled.");
 				}
 			}
 		} catch (InvalidTalkException e) {
@@ -76,120 +76,130 @@ public class ConferenceProcessor {
 	}
 
 	/**
-	 * Prepare the schedule of talks.
+	 * Main method to prepare the schedule of talks.
 	 * 
 	 * @param talksList
 	 * @return
 	 * @throws InvalidTalkException
 	 */
-	public List<List<Talks>> getSchedule(List<Talks> talksList) throws InvalidTalkException {
+	public List<List<Talks>> getSchedule(List<Talks> talks) throws InvalidTalkException {
 		List<Talks> talkTemp = new ArrayList<Talks>();
-		talkTemp.addAll(talksList);
-		// TODO
-		// remove
-		int perDayMinTime = 6 * 60;
-		int totalTalksTime = TimeCalc.getTotalTalksTime(talkTemp);
-		int totalPossibleDays = totalTalksTime / perDayMinTime;
+		int maxEveningLimit = 240;
+		talkTemp.addAll(talks);
+		int totalTalkDuration = TimeCalc.getTotalTalksTime(talkTemp);
 
-		List<List<Talks>> mornings = finCombination(talkTemp, totalPossibleDays, true);
-		for (List<Talks> talkList : mornings) {
-			talkTemp.removeAll(talkList);
+		// using 6 since we have to schedule the talks between 9-12 and 1-4
+		int perDayTime = 6 * 60;
+		int possibleDays = totalTalkDuration / perDayTime;
+
+		// removing scheduled list from complete list
+		List<List<Talks>> mornings = findCombination(talkTemp, possibleDays, true);
+		for (List<Talks> list : mornings) {
+			talkTemp.removeAll(list);
 		}
 
-		List<List<Talks>> evenings = finCombination(talkTemp, totalPossibleDays, false);
-		for (List<Talks> talkList : evenings) {
-			talkTemp.removeAll(talkList);
+		// removing scheduled list from complete list
+		List<List<Talks>> evenings = findCombination(talkTemp, possibleDays, false);
+		for (List<Talks> list : evenings) {
+			talkTemp.removeAll(list);
 		}
 
-		// No talks! Error occured somewhere.
+		// Add talks with the remaining minutes
 		if (!talkTemp.isEmpty()) {
-			// throw new InvalidTalkException("Empty Schedule");
+			List<Talks> scheduledTalks = new ArrayList<Talks>();
+			for (List<Talks> listEvening : evenings) {
+				int totalEvnTime = TimeCalc.getTotalTalksTime(listEvening);
+				for (Talks talkss : talkTemp) {
+					int dura = talkss.getDuration();
+					if (dura + totalEvnTime <= maxEveningLimit) {
+						listEvening.add(talkss);
+						talkss.setSchduled(true);
+						scheduledTalks.add(talkss);
+					}
+				}
+				talkTemp.removeAll(scheduledTalks);
+				if (talkTemp.isEmpty()) {
+					break;
+				}
+			}
 		}
-
-		// TODO
-		// fill up the remaining minutes
-
-		// TODO
-		// If operation list is still not empty, its mean the conference can not
-		// be scheduled with the provided data.
+		if (!talkTemp.isEmpty()) {
+			throw new InvalidTalkException("Cannot schedule. Internal Error");
+		}
 
 		// Print the track lists.
 		return printList(mornings, evenings);
 	}
 
-	private List<List<Talks>> finCombination(List<Talks> talksListForOperation, int totalPossibleDays,
-			boolean isMorning) {
-		int minSessionTimeLimit = 180;
-		int maxSessionTimeLimit = 240;
+	/**
+	 * Selecting the combination of Talks.
+	 * 
+	 * @param talkList
+	 * @param daysPossible
+	 * @param isMorning
+	 * @return
+	 */
+	private List<List<Talks>> findCombination(List<Talks> talkList, int daysPossible, boolean isMorning) {
+		int talkListSize = talkList.size();
+		int minTime = 180;
+		int maxTime = 240;
 
-		if (isMorning)
-			maxSessionTimeLimit = minSessionTimeLimit;
+		if (isMorning) {
+			maxTime = minTime;
+		}
 
-		int talkListSize = talksListForOperation.size();
-		List<List<Talks>> possibleCombinationsOfTalks = new ArrayList<List<Talks>>();
-		int possibleCombinationCount = 0;
+		List<List<Talks>> combinationOfTalks = new ArrayList<List<Talks>>();
+		int combinationCount = 0;
 
-		// Loop to get combination for total possible days.
-		// Check one by one from each talk to get possible combination.
+		// Checking one by one from each talk to get possible combination.
 		for (int count = 0; count < talkListSize; count++) {
+
 			int startPoint = count;
 			int totalTime = 0;
+
 			List<Talks> possibleCombinationList = new ArrayList<Talks>();
 
 			// Loop to get possible combination.
 			while (startPoint != talkListSize) {
 				int currentCount = startPoint;
 				startPoint++;
-				Talks currentTalk = talksListForOperation.get(currentCount);
+				Talks currentTalk = talkList.get(currentCount);
 				if (currentTalk.isSchduled())
 					continue;
-				int talkTime = currentTalk.getDuration();
-				// If the current talk time is greater than maxSessionTimeLimit
-				// or
-				// sum of the current time and total of talk time added in list
-				// is greater than maxSessionTimeLimit.
-				// then continue.
-				if (talkTime > maxSessionTimeLimit || talkTime + totalTime > maxSessionTimeLimit) {
+				int curentTime = currentTalk.getDuration();
+
+				if (curentTime > maxTime || curentTime + totalTime > maxTime) {
 					continue;
 				}
 
 				possibleCombinationList.add(currentTalk);
-				totalTime += talkTime;
+				totalTime = totalTime + curentTime;
 
-				// If total time is completed for this session than break this
-				// loop.
 				if (isMorning) {
-					if (totalTime == maxSessionTimeLimit)
+					if (totalTime == maxTime)
 						break;
-				} else if (totalTime >= minSessionTimeLimit)
+				} else if (totalTime >= minTime)
 					break;
 			}
 
-			// Valid session time for morning session is equal to
-			// maxSessionTimeLimit.
-			// Valid session time for evening session is less than or eqaul to
-			// maxSessionTimeLimit and greater than or equal to
-			// minSessionTimeLimit.
 			boolean validSession = false;
 			if (isMorning)
-				validSession = (totalTime == maxSessionTimeLimit);
+				validSession = (totalTime == maxTime);
 			else
-				validSession = (totalTime >= minSessionTimeLimit && totalTime <= maxSessionTimeLimit);
+				validSession = (totalTime >= minTime && totalTime <= maxTime);
 
-			// If session is valid than add this session in the possible
-			// combination list and set all added talk as scheduled.
 			if (validSession) {
-				possibleCombinationsOfTalks.add(possibleCombinationList);
+				combinationOfTalks.add(possibleCombinationList);
 				for (Talks talk : possibleCombinationList) {
 					talk.setSchduled(true);
 				}
-				possibleCombinationCount++;
-				if (possibleCombinationCount == totalPossibleDays)
+				combinationCount++;
+				if (combinationCount == daysPossible)
 					break;
 			}
 		}
 
-		return possibleCombinationsOfTalks;
+		return combinationOfTalks;
 	}
 
 	private List<List<Talks>> printList(List<List<Talks>> combForMornSessions, List<List<Talks>> combForEveSessions) {

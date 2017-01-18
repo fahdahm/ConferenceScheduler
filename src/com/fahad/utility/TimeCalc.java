@@ -18,14 +18,14 @@ public class TimeCalc {
 		return dateFormat.format(d);
 	}
 
-	public static int getTotalTalksTime(List<Talks> talksList) {
-		int totalTime = 0;
-		if (talksList == null || talksList.isEmpty()) {
+	public static int getTotalTalksTime(List<Talks> list) {
+		int total = 0;
+		if (list == null || list.isEmpty()) {
 			return 0;
 		}
-		for (Talks t : talksList) {
-			totalTime = totalTime + t.getDuration();
+		for (Talks t : list) {
+			total = total + t.getDuration();
 		}
-		return totalTime;
+		return total;
 	}
 }
