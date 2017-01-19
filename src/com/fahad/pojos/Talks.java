@@ -1,5 +1,11 @@
 package com.fahad.pojos;
 
+/**
+ * POJO for holding the talk list.
+ * 
+ * @author fahaahme
+ *
+ */
 @SuppressWarnings("rawtypes")
 public class Talks implements Comparable {
 	private String topicName;
@@ -52,7 +58,7 @@ public class Talks implements Comparable {
 
 	@Override
 	public String toString() {
-		return "Talks [topicName=" + topicName + ", time=" + schTime + "]";
+		return "Talks [topicName=" + topicName + ", duration=" + duration + "]";
 	}
 
 	@Override

@@ -8,10 +8,16 @@ import com.fahad.exception.InvalidTalkException;
 import com.fahad.logic.ConferenceProcessor;
 import com.fahad.pojos.Talks;
 
+/**
+ * Class with main method to start the application.
+ * 
+ * @author fahadahmed
+ *
+ */
 public class ConferenceStarter {
 
 	public static void main(String[] args) {
-		String fileName = "D:\\input.txt";
+		String fileName = "/input.txt";
 		File file = new File(fileName);
 		ConferenceProcessor cf = new ConferenceProcessor();
 		try {
@@ -19,12 +25,11 @@ public class ConferenceStarter {
 			List<String> rawList = cf.createListFromFile(file);
 
 			// Sort the list of Talk
-			List<Talks> sortedList = cf.sortedTalks(rawList);
+			List<Talks> sortedList = cf.splittedTalks(rawList);
 
 			// Find the schdule of List
 			cf.getSchedule(sortedList);
 		} catch (InvalidTalkException | IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

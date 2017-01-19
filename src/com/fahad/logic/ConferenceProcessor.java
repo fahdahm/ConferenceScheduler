@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -14,10 +13,16 @@ import com.fahad.exception.InvalidTalkException;
 import com.fahad.pojos.Talks;
 import com.fahad.utility.TimeCalc;
 
+/**
+ * Class to do actual processing of the logic.
+ * 
+ * @author fahadahmed
+ *
+ */
 public class ConferenceProcessor {
 
 	/**
-	 * Method to read data from file.
+	 * Method to read data from file. Path of File : D:\\input.txt
 	 * 
 	 * @param file
 	 * @return
@@ -44,13 +49,12 @@ public class ConferenceProcessor {
 	}
 
 	/**
-	 * Method to return sorted list of all talks in file
+	 * Method to return sorted list of all talks in file passed.
 	 * 
 	 * @param list
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public List<Talks> sortedTalks(List<String> list) {
+	public List<Talks> splittedTalks(List<String> list) {
 		List<Talks> objTalkList = new ArrayList<Talks>();
 
 		try {
@@ -71,14 +75,13 @@ public class ConferenceProcessor {
 		} catch (InvalidTalkException e) {
 			e.printStackTrace();
 		}
-		Collections.sort(objTalkList);
 		return objTalkList;
 	}
 
 	/**
-	 * Main method to prepare the schedule of talks.
+	 * Method to prepare the schedule of talks.
 	 * 
-	 * @param talksList
+	 * @param talks
 	 * @return
 	 * @throws InvalidTalkException
 	 */
@@ -89,23 +92,24 @@ public class ConferenceProcessor {
 
 		int totalTalkDuration = TimeCalc.getTotalTalksTime(talkTemp);
 
-		// using 6 since we have to schedule the talks between 9-12 and 1-4
+		// using 6 since we have to schedule the talks between 9-12 and 1-4. We
+		// have to schedule all talks before 4.
 		int perDayTime = 6 * 60;
 		int possibleDays = totalTalkDuration / perDayTime;
 
-		// removing scheduled list from complete list
+		// removing scheduled morning list from complete list
 		List<List<Talks>> mornings = findCombination(talkTemp, possibleDays, true);
 		for (List<Talks> list : mornings) {
 			talkTemp.removeAll(list);
 		}
 
-		// removing scheduled list from complete list
+		// removing scheduled evening list from complete list
 		List<List<Talks>> evenings = findCombination(talkTemp, possibleDays, false);
 		for (List<Talks> list : evenings) {
 			talkTemp.removeAll(list);
 		}
 
-		// Add talks with the remaining minutes for Scheduled Networking tasks
+		// With the remaining time add talk for Scheduled Networking task.
 		if (!talkTemp.isEmpty()) {
 			List<Talks> allScheduledTalks = new ArrayList<Talks>();
 
@@ -126,27 +130,25 @@ public class ConferenceProcessor {
 			}
 
 		}
-		if (!talkTemp.isEmpty()) {
-			throw new InvalidTalkException("Cannot schedule. Internal Error");
-		}
 
-		// Print the track lists.
+		// call method to print track lists
 		return printList(mornings, evenings);
 	}
 
 	/**
-	 * Method to print the tracks
+	 * Method to print the tracks by day
 	 * 
-	 * @param combForMornSessions
+	 * @param morningSession
 	 * @param combForEveSessions
 	 * @return
 	 */
-	private List<List<Talks>> printList(List<List<Talks>> morningSession, List<List<Talks>> combForEveSessions) {
+	@SuppressWarnings("deprecation")
+	private List<List<Talks>> printList(List<List<Talks>> morningSession, List<List<Talks>> eveningSessions) {
 
 		List<List<Talks>> scheduledTalksList = new ArrayList<List<Talks>>();
 		int noOfDays = morningSession.size();
 
-		// Loop to schedule event for all days.
+		// Loop to schedule event for all days.Starting with 1.
 		for (int dayCount = 0; dayCount < noOfDays; dayCount++) {
 
 			List<Talks> talkList = new ArrayList<Talks>();
@@ -184,7 +186,7 @@ public class ConferenceProcessor {
 			// Evening Session
 			date = TimeCalc.getNextScheduledTime(date, lunchTime);
 			scheduledTime = dateFormat.format(date);
-			List<Talks> evnList = combForEveSessions.get(dayCount);
+			List<Talks> evnList = eveningSessions.get(dayCount);
 			for (Talks talk : evnList) {
 				talk.setSchTime(scheduledTime);
 				System.out.println(scheduledTime + " " + talk.getTopicName());
@@ -210,11 +212,11 @@ public class ConferenceProcessor {
 	 * Selecting the combination of Talks.
 	 * 
 	 * @param talkList
-	 * @param daysPossible
+	 * @param possibleDays
 	 * @param isMorning
 	 * @return
 	 */
-	private List<List<Talks>> findCombination(List<Talks> talkList, int daysPossible, boolean isMorning) {
+	private List<List<Talks>> findCombination(List<Talks> talkList, int possibleDays, boolean isMorning) {
 		int size = talkList.size();
 		int minTime = 180;
 		int maxTime = 240;
@@ -271,11 +273,10 @@ public class ConferenceProcessor {
 					talk.setSchduled(true);
 				}
 				combCount++;
-				if (combCount == daysPossible)
+				if (combCount == possibleDays)
 					break;
 			}
 		}
-
 		return combinationOfTalks;
 	}
 
